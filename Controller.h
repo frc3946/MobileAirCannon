@@ -972,10 +972,10 @@ private:
 
 //Xbee Config Info
 #define SAMPLE_NUMBER 0
-#define LYPIN 7
-#define RYPIN 8
-#define L1PIN 9
-#define R1PIN 10
+#define LYPIN 3
+#define RYPIN 4
+#define L1PIN 6
+#define R1PIN 7
 
 //Packet Error Codes
 #define GENERAL_ERROR 1
@@ -991,6 +991,7 @@ private:
     Rx64IoSampleResponse ioSample;
     int8_t convertAnalog(uint16_t analog);
     uint8_t errorCode;
+	void printIO();
 public:
 	Controller();
 	void attach(Stream &serial);

@@ -1,7 +1,9 @@
 #include "Relay.h"
 
 const Relay::Direction Relay::OFF(false);
+const Relay::Direction Relay::GND(false);
 const Relay::Direction Relay::ON(true);
+const Relay::Direction Relay::PWR(true);
 
 //-------------------------------------------
 Relay::Direction::Direction() { //default needed for whatever reason
@@ -30,9 +32,7 @@ void Relay::attach(uint8_t pin) {
 	_pin = pin;
 
 	pinMode(_pin, OUTPUT);
-	digitalWrite(_pin, LOW);
 	
-	set(Relay::OFF);
 	_init = true;
 }
 

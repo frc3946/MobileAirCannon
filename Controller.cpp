@@ -1482,8 +1482,9 @@ bool Controller::update() {
 	if(xbee.getResponse().isAvailable()) { //Got Something!
 		if (xbee.getResponse().getApiId() == RX_64_IO_RESPONSE) {
 			xbee.getResponse().getRx64IoSampleResponse(ioSample);
-			if(ioSample.getSampleSize() == SAMPLE_NUMBER) {
+			if(ioSample.getSampleSize() == SAMPLE_NUMBER+1) {
 				errorCode = 0;
+				printIO();
 				return true;
 			}
 			errorCode = INCORRECT_NUMBER_SAMPLES;
@@ -1523,24 +1524,39 @@ void Controller::printErrorMessage(Stream &serial) {
 }
 
 int8_t Controller::getLY() {
-	if(ioSample.isAnalogEnabled(LYPIN))
+	if(ioSample.isAnalogEnabled(LYPIN)) {
 		return convertAnalog(ioSample.getAnalog(LYPIN, SAMPLE_NUMBER));
+		//return ioSample.getAnalog(LYPIN, SAMPLE_NUMBER);
+	}
 }
 int8_t Controller::getRY() {
-	if(ioSample.isAnalogEnabled(RYPIN))
+	if(ioSample.isAnalogEnabled(RYPIN)) {
 		return convertAnalog(ioSample.getAnalog(RYPIN, SAMPLE_NUMBER));
+		//return ioSample.getAnalog(RYPIN, SAMPLE_NUMBER);
+	}
 }
 
 bool Controller::getL1() {
-	if(ioSample.isDigitalEnabled(L1PIN))
+	//if(ioSample.isDigitalEnabled(L1PIN)) {
 		return !(ioSample.isDigitalOn(L1PIN, SAMPLE_NUMBER));
+	//}
 }
 bool Controller::getR1() {
-	if(ioSample.isDigitalEnabled(R1PIN))
+	//if(ioSample.isDigitalEnabled(R1PIN)) {
 		return !(ioSample.isDigitalOn(R1PIN, SAMPLE_NUMBER));
+	//}
 }
 
 int8_t Controller::convertAnalog(uint16_t analog) {
 	// return ((analog/1023*200)-100);
 	return map(analog, 0, 1023, -100, 100);
+}
+
+void Controller::printIO() {
+	uint8_t* frameData = ioSample.getFrameData();
+	for (int x =0;x< 20;x++) {
+		Serial.print(frameData[x], HEX);
+		Serial.print(" ");
+	}
+	Serial.println();
 }

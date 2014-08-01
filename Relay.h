@@ -63,7 +63,9 @@ private:
 public:
 
 	static const Direction OFF; //false
+	static const Direction GND; //false
 	static const Direction ON; //true
+	static const Direction PWR; //true
 
 	Relay();
 	void attach(uint8_t pin);

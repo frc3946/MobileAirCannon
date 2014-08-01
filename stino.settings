@@ -1,0 +1,17 @@
+{
+    "arduino_folder": "/usr/share/arduino", 
+    "baudrate": 4, 
+    "board": 7, 
+    "extra_flag": "", 
+    "full_compilation": true, 
+    "platform": 1, 
+    "platform_name": "Arduino AVR Boards", 
+    "programmer": {
+        "1": 2
+    }, 
+    "serial_port": 0, 
+    "set_bare_gcc_only": false, 
+    "show_compilation_output": true, 
+    "show_upload_output": true, 
+    "verify_code": false
+}
