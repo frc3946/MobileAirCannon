@@ -1484,7 +1484,6 @@ bool Controller::update() {
 			xbee.getResponse().getRx64IoSampleResponse(ioSample);
 			if(ioSample.getSampleSize() == SAMPLE_NUMBER+1) {
 				errorCode = 0;
-				printIO();
 				return true;
 			}
 			errorCode = INCORRECT_NUMBER_SAMPLES;
@@ -1552,11 +1551,11 @@ int8_t Controller::convertAnalog(uint16_t analog) {
 	return map(analog, 0, 1023, -100, 100);
 }
 
-void Controller::printIO() {
+void Controller::printFrameData(Stream &serial) {
 	uint8_t* frameData = ioSample.getFrameData();
 	for (int x =0;x< 20;x++) {
-		Serial.print(frameData[x], HEX);
-		Serial.print(" ");
+		serial.print(frameData[x], HEX);
+		serial.print(" ");
 	}
-	Serial.println();
+	serial.println();
 }

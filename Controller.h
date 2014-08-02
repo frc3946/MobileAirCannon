@@ -991,12 +991,12 @@ private:
     Rx64IoSampleResponse ioSample;
     int8_t convertAnalog(uint16_t analog);
     uint8_t errorCode;
-	void printIO();
 public:
 	Controller();
 	void attach(Stream &serial);
 	void printErrorMessage(Stream &serial);
 	bool update();
+	void printFrameData(Stream &serial);
 	int8_t getLY();
 	int8_t getRY();
 	bool getL1();

@@ -1,6 +1,6 @@
 #define WATCHDOG_TIMEOUT WDTO_500MS
 #define XBEE_BAUD 115200
-
+#define XBEE_TIMEOUT 150
 #define FIRE_DELAY 1500
 #define RELAY_DELAY 30
 
@@ -44,7 +44,6 @@ class Barrel {
             timer = millis();
         }else { //Hold established, now firing
           if(!fired) { //Has valve been opened
-            Serial.println("FIRED!");
             relay.set(Relay::GND); //if not, open it
             timer = millis(); //reset timer to track time open
             fired = true; //and notify that it has been opened
@@ -65,6 +64,7 @@ class Barrel {
       relay.set(Relay::PWR);
     }
 };
+unsigned long xbeeTimer;
 
 Controller controller;
 
@@ -109,7 +109,9 @@ void loop() {
   feedWatchdog();
 
   if(controller.update()) { //Successful Data Retreval from Controller
+    xbeeTimer = millis();
   //*
+    controller.printFrameData(Serial);
     Serial.print("LY: ");
   	Serial.println(controller.getLY());
   	Serial.print("RY: ");
@@ -130,9 +132,13 @@ void loop() {
     leftMotor.set(controller.getLY());
     rightMotor.set(controller.getRY());
 	//*/
-  } else { //Handle Controller Error Codes
-    leftBarrel.check(controller.getL1());
-    rightBarrel.check(controller.getR1());
-    //controller.printErrorMessage(Serial);
+  } else {
+    if(millis() - xbeeTimer < XBEE_TIMEOUT) { 
+      leftBarrel.check(controller.getL1());
+      rightBarrel.check(controller.getR1());
+    } else {
+      
+    }
+    //controller.printErrorMessage(Serial); //Handle Controller Error Codes
   }
 }

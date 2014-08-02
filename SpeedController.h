@@ -94,7 +94,7 @@ typedef enum { _timer1, _Nbr_16timers } timer16_Sequence_t ;
 
 #define INVALID_SERVO         255     // flag indicating an invalid speedController index
 
-#define MAX_RUNS 50 //incraments of 50 should be ~1 second
+#define MAX_RUNS 25 //incraments of 50 should be ~1 second
 
 typedef struct  {
   uint8_t nbr        :6 ;             // a pin number from 0 to 63
