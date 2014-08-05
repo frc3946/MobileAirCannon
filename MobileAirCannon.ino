@@ -1,8 +1,9 @@
 #define WATCHDOG_TIMEOUT WDTO_500MS
 #define XBEE_BAUD 115200
 #define XBEE_TIMEOUT 150
-#define FIRE_DELAY 1500
-#define RELAY_DELAY 30
+#define BUTTON_UP_DELAY 500
+#define BUTTON_DOWN_DELAY 1500
+#define FIRING_TIME 30
 
 
 #include "./SpeedController.h"
@@ -21,46 +22,59 @@ void feedWatchdog()
 class Barrel {
   private:
     Relay relay;
-    bool primed;
-    bool fired;
-    bool resetting;
+    uint8_t firingState;
     unsigned long timer; //used to track button and track relay
   public:
     Barrel() {
-      primed = false;
-      fired = false;
-      resetting = false;
+      firingState = 0;
       timer = millis();
     }
-    void check(bool button) {
-      if(!resetting || (resetting && !button)) { //are we reset, or resettings
-        resetting = false; //if so, make sure we are reset!
-        if(!primed) { //Has a Hold already been Established
-          if(button) {//If not, are we currently trying to
-            if(millis() - timer > FIRE_DELAY) {//if so has it been
-              primed = true;
-            }
-          }else //reset timer until hold is trying to be established
+    void updateFireButton(bool button) {
+      switch (firingState) {
+        case 0: //reset system timer
+          timer = millis();
+          firingState++;
+          break;
+
+        case 1: //waiting for button left up for X seconds
+          if (button == true)
             timer = millis();
-        }else { //Hold established, now firing
-          if(!fired) { //Has valve been opened
-            relay.set(Relay::GND); //if not, open it
-            timer = millis(); //reset timer to track time open
-            fired = true; //and notify that it has been opened
-          }else { //Valve has opened
-            if(millis() - timer > RELAY_DELAY) { //Has the alotted open time crossed
-              relay.set(Relay::PWR); //If so, turn valve off
-              primed = false; //reset values and timer for establishing a new hold
-              fired = false;
-              resetting = true; //to force user to depress button before firing again
-              timer = millis();
-            }
+          else if (millis() - timer > BUTTON_UP_DELAY) {
+            timer = millis();
+            firingState++;
           }
-        }
+          break;
+
+        case 2: //wait for button to be pressed
+          if (button == true) {
+            timer = millis();
+            firingState++;
+          }
+          break;
+
+        case 3: //wait for button to be held down for x seconds
+          if (button == false)  //if button is released then reset the system
+            firingState=0;
+          else if (millis() - timer > BUTTON_DOWN_DELAY) {
+            relay.set(Relay::GND); //open relay and reset timer
+            timer = millis();
+            firingState++;
+          }
+          break;
+
+        case 4: //firing! wait for timeout and then close the relay
+          if (millis() - timer > FIRING_TIME) {
+           relay.set(Relay::PWR); //If so, turn valve off
+           firingState =0;
+          }
+          break;
       }
     }
     void attach(uint8_t pin) {
       relay.attach(pin);
+      relay.set(Relay::PWR);
+    }
+    void shutOff() { //Closes Valve
       relay.set(Relay::PWR);
     }
 };
@@ -101,7 +115,7 @@ void loop() {
 
   if(controller.update()) { //Successful Data Retreval from Controller
     xbeeTimer = millis();
-  //*
+  //* Remove one of the "/" to comment out block
     controller.printFrameData(Serial);
     Serial.print("LY: ");
   	Serial.println(controller.getLY());
@@ -116,19 +130,22 @@ void loop() {
   	else
   		Serial.println("R1: False");
 	//*/
-	//*
-    leftBarrel.check(controller.getL1());
-    rightBarrel.check(controller.getR1());
+	//* Remove one of the "/" to comment out block
+    leftBarrel.updateFireButton(controller.getL1());
+    rightBarrel.updateFireButton(controller.getR1());
 	
     leftMotor.set(controller.getLY());
     rightMotor.set(controller.getRY());
 	//*/
   } else {
     if(millis() - xbeeTimer < XBEE_TIMEOUT) { 
-      leftBarrel.check(controller.getL1());
-      rightBarrel.check(controller.getR1());
+      leftBarrel.updateFireButton(controller.getL1());
+      rightBarrel.updateFireButton(controller.getR1());
     } else {
-
+      leftMotor.set(0);
+      rightMotor.set(0);
+      leftBarrel.shutOff();
+      rightBarrel.shutOff();
     }
     //controller.printErrorMessage(Serial); //Handle Controller Error Codes
   }
