@@ -87,15 +87,6 @@ void setup() {
   Serial1.begin(XBEE_BAUD);
   controller.attach(Serial1);
 
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  digitalWrite(3, HIGH);
-  digitalWrite(4, LOW);
-  digitalWrite(6, HIGH);
-  digitalWrite(7, LOW);
-
   leftMotor.attach(leftMotorPin);
   rightMotor.attach(rightMotorPin);
 
@@ -137,7 +128,7 @@ void loop() {
       leftBarrel.check(controller.getL1());
       rightBarrel.check(controller.getR1());
     } else {
-      
+
     }
     //controller.printErrorMessage(Serial); //Handle Controller Error Codes
   }
