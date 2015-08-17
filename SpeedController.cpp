@@ -56,7 +56,7 @@
 //#define NBR_TIMERS        (MAX_SERVOS / SERVOS_PER_TIMER)
 
 static speedController_t speedControllers[MAX_SERVOS];                          // static array of speedController structures
-static volatile int8_t Channel[_Nbr_16timers ];             // counter for the speedController being pulsed for each timer (or -1 if refresh interval)
+static volatile int8_t Channel[_Nbr_16timers ];  9           // counter for the speedController being pulsed for each timer (or -1 if refresh interval)
 
 uint8_t SpeedControllerCount = 0;                                     // the total number of attached speedControllers
 
