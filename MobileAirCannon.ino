@@ -87,7 +87,7 @@ class Barrel {
           if (button == false)  //if button is released then reset the system
             firingState=0;
           else if (millis() - timer > BUTTON_DOWN_DELAY) {
-            relay.set(Relay::GND); //open relay and reset timer
+            relay.set(Relay::PWR); //open relay and reset timer
             timer = millis();
             firingState++;
           }
@@ -95,7 +95,7 @@ class Barrel {
 
         case 4: //firing! wait for timeout and then close the relay
           if (millis() - timer > FIRING_TIME) {
-           relay.set(Relay::PWR); //If so, turn valve off
+           relay.set(Relay::GND); //If so, turn valve off
            firingState =0;
           }
           break;
@@ -104,10 +104,10 @@ class Barrel {
     
     void attach(uint8_t pin) {
       relay.attach(pin);
-      relay.set(Relay::PWR);
+      relay.set(Relay::GND);
     }
     void shutOff() { //Closes Valve
-      relay.set(Relay::PWR);
+      relay.set(Relay::GND);
     }
 };
 unsigned long xbeeTimer;
