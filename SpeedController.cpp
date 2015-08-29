@@ -56,7 +56,7 @@
 //#define NBR_TIMERS        (MAX_SERVOS / SERVOS_PER_TIMER)
 
 static speedController_t speedControllers[MAX_SERVOS];                          // static array of speedController structures
-static volatile int8_t Channel[_Nbr_16timers ];  9           // counter for the speedController being pulsed for each timer (or -1 if refresh interval)
+static volatile int8_t Channel[_Nbr_16timers ];             // counter for the speedController being pulsed for each timer (or -1 if refresh interval)
 
 uint8_t SpeedControllerCount = 0;                                     // the total number of attached speedControllers
 
@@ -264,11 +264,12 @@ uint8_t SpeedController::attach(int pin)
 
 uint8_t SpeedController::attach(int pin, int min, int max)
 {
+
   if(this->speedControllerIndex < MAX_SERVOS ) {
     pinMode( pin, OUTPUT) ;                                   // set speedController pin to output
     speedControllers[this->speedControllerIndex].Pin.nbr = pin;  
     speedControllers[this->speedControllerIndex].runs = 0;
-    // todo min/max check: abs(min - MIN_PULSE_WIDTH) /4 < 128 
+    //todo min/max check: abs(min - MIN_PULSE_WIDTH) /4 < 128 
     this->min  = (MIN_PULSE_WIDTH - min)/4; //resolution of min/max is 4 uS
     this->max  = (MAX_PULSE_WIDTH - max)/4; 
     // initialize the timer if it has not already been initialized 

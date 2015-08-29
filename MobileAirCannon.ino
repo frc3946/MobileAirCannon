@@ -87,7 +87,7 @@ class Barrel {
           if (button == false)  //if button is released then reset the system
             firingState=0;
           else if (millis() - timer > BUTTON_DOWN_DELAY) {
-            relay.set(Relay::PWR); //open relay and reset timer
+            relay.set(Relay::GND); //open relay and reset timer
             timer = millis();
             firingState++;
           }
@@ -95,7 +95,7 @@ class Barrel {
 
         case 4: //firing! wait for timeout and then close the relay
           if (millis() - timer > FIRING_TIME) {
-           relay.set(Relay::GND); //If so, turn valve off
+           relay.set(Relay::PWR); //If so, turn valve off
            firingState =0;
           }
           break;
@@ -104,10 +104,10 @@ class Barrel {
     
     void attach(uint8_t pin) {
       relay.attach(pin);
-      relay.set(Relay::GND);
+      relay.set(Relay::PWR);
     }
     void shutOff() { //Closes Valve
-      relay.set(Relay::GND);
+      relay.set(Relay::PWR);
     }
 };
 unsigned long xbeeTimer;
@@ -124,26 +124,43 @@ Barrel rightBarrel;
 
 //PinMap
 
-  uint8_t leftMotorPin1 = 2;
-  uint8_t leftMotorPin2 = 3;
+  //21 total DIO pins
+  //These two pin are used to jump over the serial coms
+  uint8_t serialJumper1 = 2;
+  uint8_t serialJumper2 = 3;
   uint8_t rightMotorPin1 = 4;
   uint8_t rightMotorPin2 = 5;
+  uint8_t relayBoardPwr = 6;
+  uint8_t relayBoardGrnd = 7;
   uint8_t leftBarrelPin = 8;
   uint8_t rightBarrelPin = 9;
+  uint8_t leftMotorPin1 = 10;
+  uint8_t leftMotorPin2 = 11;
+  uint8_t compressorRelay = 12;
+  uint8_t compressorSwitch = 13;
   
 void setup() {
-  pinMode(2, INPUT);
-  pinMode(3, INPUT);
+  //these two pin are used to jumper over the serial coms
+  pinMode(serialJumper1, INPUT);
+  pinMode(serialJumper2, INPUT);
+  pinMode(relayBoardPwr, OUTPUT);
+  pinMode(relayBoardGrnd, OUTPUT);
+  pinMode(compressorRelay, OUTPUT);
+  pinMode(compressorSwitch, INPUT);
+
+  digitalWrite(relayBoardGrnd, LOW);
+  digitalWrite(relayBoardPwr, HIGH);
+  digitalWrite(compressorRelay, LOW);
   
   Serial.begin(9600);
   while(!Serial); //Wait for Serial Port to Connect. (For Leonardo Only)
   
   Serial.println("Setup!");
 
-  //leftMotor1.attach(leftMotorPin1);
-  //rightMotor1.attach(rightMotorPin1);
-  //leftMotor2.attach(leftMotorPin2);
-  //rightMotor2.attach(rightMotorPin2);
+  leftMotor1.attach(leftMotorPin1);
+  rightMotor1.attach(rightMotorPin1);
+  leftMotor2.attach(leftMotorPin2);
+  rightMotor2.attach(rightMotorPin2);
   Serial3.begin(XBEE_BAUD);
   leftBarrel.attach(leftBarrelPin);
   rightBarrel.attach(rightBarrelPin);
@@ -161,6 +178,8 @@ void loop() {
     Serial.println("Alive!");
     imAlivePrint = millis();
   }
+
+  CompressorUpdate();
 
   if(ControllerUpdate() == 1) { //Successful Data Retreval from Controller
     xbeeTimer = millis();
@@ -183,20 +202,20 @@ void loop() {
     leftBarrel.updateFireButton(buttonState[LEFTZ_1]);
     rightBarrel.updateFireButton(buttonState[RIGHTZ_1]);
 	
-    //leftMotor1.set(joystick[LEFTY]);
-    //rightMotor1.set(joystick[RIGHTY]);
-    //leftMotor2.set(joystick[LEFTY]);
-    //rightMotor2.set(joystick[RIGHTY]);
+    leftMotor1.set(joystick[LEFTY]);
+    rightMotor1.set(joystick[RIGHTY]);
+    leftMotor2.set(joystick[LEFTY]);
+    rightMotor2.set(joystick[RIGHTY]);
 	//*/
   } else {
     if(millis() - xbeeTimer < XBEE_TIMEOUT) { 
       leftBarrel.updateFireButton(buttonState[LEFTZ_1]);
       rightBarrel.updateFireButton(buttonState[RIGHTZ_1]);
     } else {
-      //leftMotor1.set(0);
-      //rightMotor1.set(0);
-      //leftMotor2.set(0);
-      //rightMotor2.set(0);
+      leftMotor1.set(0);
+      rightMotor1.set(0);
+      leftMotor2.set(0);
+      rightMotor2.set(0);
       leftBarrel.shutOff();
       rightBarrel.shutOff();
     }
@@ -221,6 +240,9 @@ int ControllerUpdate(){
     }
     index++;  
   }
+
+  //Serial.write("Done reading");
+  
   if (timeToProcessFlag == 0){
     return 0;
   }
@@ -278,6 +300,22 @@ unsigned short crc16(unsigned char* data_p, unsigned char length){
     crc = (crc << 8) ^ ((unsigned short)(x << 12)) ^ ((unsigned short)(x <<5)) ^ ((unsigned short)x);
   }
   return crc;
+}
+
+void CompressorUpdate(){
+  static unsigned long lastUpdateTime = 0;
+  if(millis() - lastUpdateTime >= 5000){
+    lastUpdateTime = millis();
+  }
+  else{
+    return;
+  }
+  if(digitalRead(compressorSwitch) == HIGH){
+    digitalWrite(compressorRelay, HIGH);
+  }
+  else{
+    digitalWrite(compressorRelay, LOW);
+  }
 }
 
 void parseString(char* controllerState){
